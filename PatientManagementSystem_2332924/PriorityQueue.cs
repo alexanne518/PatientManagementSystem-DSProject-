@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -33,7 +34,7 @@ namespace PatientManagementSystem_2332924
         }
 
         
-        public void Enqueue(Patient patient) // Register patients arriving at the ER  
+        public Patient Enqueue(Patient patient) // Register patients arriving at the ER  
         {
             if (this.IsFull()) // Resize the array if full  
             {
@@ -44,23 +45,29 @@ namespace PatientManagementSystem_2332924
             {
                 this.front = 0; 
                 this.back = 0;
-                array[back] = patient; // add the first patient
+                this.array[this.back] = patient; // add the first patient
             }
             else
             {
                 // Find the correct position to insert the patient based on urgency
-                int i = back;
+                int i = back; // if we want to insert new patient, we need to start from the back
                 while (i >= front && ComparePatients(array[i], patient) < 0)
+                // the existing patient at i has lower priority (time or urgency) than the new patient
+                // for example, Bao Anh has level 2 urgency and Annabella has level 3 urgency
+                // ComparePatients will return -1, so we need to shift the existing patient to the right
                 {
-                    array[i + 1] = array[i];
-                    i--;
+                    array[i + 1] = array[i]; // shift the existing patient to the right
+                    i--; // move to the next patient
                 }
+                // if didn't match the condition, we need to insert the new patient at the right position (increment the queue)
                 array[i + 1] = patient;
                 this.back++;
             }
             this.count++;
+            return patient; // return the patient that was added to the queue
         }
 
+        
         public Patient Dequeue() // Allow doctors to call the next patient in line, based on urgency  
         {
             if (this.IsEmpty())
@@ -76,20 +83,71 @@ namespace PatientManagementSystem_2332924
                 this.back = -1;
             }
             return patient;
+            // Time complexity: O(1) for retrieving the patient
         }
 
         private int ComparePatients(Patient a, Patient b)
         {
             // higher urgency first
             if (a.urgencyLevel != b.urgencyLevel)
+            {     
                 return b.urgencyLevel.CompareTo(a.urgencyLevel);
+            }
 
             // if same urgency, earlier arrival first
             return b.arrivalTime.CompareTo(a.arrivalTime);
         }
-        
 
+        // allow doctors to check the next patient in line without removing them from the queue
+        public Patient Peek()
+        {
+            if (this.IsEmpty())
+            {
+                throw new InvalidOperationException("No more patients");
+            }
+            return this.array[this.front];
+        }
 
+        // Time
+        public bool RemovePatient(int id)
+        {
+            if (this.IsEmpty())
+            {
+                throw new InvalidOperationException("No more patients");
+            }
+            // find the index of the patient with the given id
+            int index = -1;
+            for (int i = this.front; i <= this.back; i++)
+            {
+                if (array[i].id == id)
+                {
+                    index = i;
+                    break;
+                }
+            }
+            // edge case when the patientId is not found in the queue
+            if (index == -1)
+            {
+                Console.WriteLine($"Patient with ID {id} not found in the queue.");
+                return false;
+            }
+            for (int i = this.front; i <= this.back; i++)
+            {
+                if (this.array[i].id == id)
+                {
+                    // shift elements to the left
+                    for (int j = i; j < this.back; j++)
+                    {
+                        array[j] = array[j + 1];
+                    }
+                    this.back--;
+                    this.count--;
+                    Console.WriteLine($"Patient with ID {id} has left the queue.");
+                    return true;
+                }
+            }
+            return false; // patient not found
+        }
 
         private bool IsEmpty()
         {
