@@ -108,7 +108,6 @@ namespace PatientManagementSystem_2332924
             return this.array[this.front];
         }
 
-        // Time
         public bool RemovePatient(int id)
         {
             if (this.IsEmpty())
@@ -131,14 +130,14 @@ namespace PatientManagementSystem_2332924
                 Console.WriteLine($"Patient with ID {id} not found in the queue.");
                 return false;
             }
-            for (int i = this.front; i <= this.back; i++)
+            for (int i = this.front; i <= this.back; i++) // iterate (scan) through the queue to find the patient with the given id
             {
                 if (this.array[i].id == id)
                 {
                     // shift elements to the left
                     for (int j = i; j < this.back; j++)
                     {
-                        array[j] = array[j + 1];
+                        array[j] = array[j + 1]; // overwrite the current patient with the next one
                     }
                     this.back--;
                     this.count--;
